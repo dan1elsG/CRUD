@@ -1,7 +1,7 @@
 import streamlit as st
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from DATABASE import conectar
+from DATABASE import conectar, verificar_conexao, criar_banco_dados
 from datetime import date
 import CRUD
 
@@ -11,17 +11,48 @@ st.set_page_config(
     layout="wide"
 )
 
-# Função para gerar chaves únicas para botões
-def get_unique_key(prefix, id_value):
-    """Gera uma chave única para componentes Streamlit."""
-    return f"{prefix}_{id_value}_{st.session_state.get('session_id', '')}"
+# Verificar conexão com o banco de dados
+if not verificar_conexao():
+    st.warning("⚠️ Tentando criar o banco de dados...")
+    if criar_banco_dados():
+        st.success("✅ Banco de dados criado com sucesso!")
+        st.rerun()
+    else:
+        st.error("❌ Não foi possível criar o banco de dados. Verifique as configurações.")
+        st.stop()
 
 # Inicialização do estado da sessão
 if 'session_id' not in st.session_state:
     st.session_state.session_id = str(hash(date.today()))
+if 'last_action' not in st.session_state:
+    st.session_state.last_action = None
+if 'show_success' not in st.session_state:
+    st.session_state.show_success = False
+if 'success_message' not in st.session_state:
+    st.session_state.success_message = ""
+if 'current_tab' not in st.session_state:
+    st.session_state.current_tab = "Universitários"
+
+# Função para gerar chaves únicas para botões
+def get_unique_key(prefix, id_value):
+    """Gera uma chave única para componentes Streamlit."""
+    return f"{prefix}_{id_value}_{st.session_state.session_id}"
+
+# Função para lidar com ações e mensagens
+def handle_action(action_type, success, message=""):
+    st.session_state.last_action = action_type
+    st.session_state.show_success = success
+    st.session_state.success_message = message
 
 # Interface do Streamlit
 st.title("🚌 Sistema de Gestão de Transporte Universitário")
+
+# Mostrar mensagens de sucesso/erro se existirem
+if st.session_state.show_success:
+    st.success(st.session_state.success_message)
+    # Limpa a mensagem após mostrar
+    st.session_state.show_success = False
+    st.session_state.success_message = ""
 
 # Mostrar próximas viagens no topo da página
 st.header("📅 Próximas Viagens")
@@ -41,16 +72,13 @@ if proximas_viagens:
             st.subheader("📋 Lista de Passageiros")
             passageiros = CRUD.listar_passageiros_por_viagem(viagem['id'])
             if passageiros:
-                data = []
-                for p in passageiros:
-                    data.append({
-                        "Nome": p['nome_universitario'],
-                        "Matrícula": p['matricula'],
-                        "Embarque": p['ponto_de_embarque'],
-                        "Desembarque": p['ponto_de_desembarque'],
-                        "Status": p['status_reserva']
-                    })
-                st.table(data)
+                st.table([{
+                    "Nome": p['nome_universitario'],
+                    "Matrícula": p['matricula'],
+                    "Embarque": p['ponto_de_embarque'],
+                    "Desembarque": p['ponto_de_desembarque'],
+                    "Status": p['status_reserva']
+                } for p in passageiros])
             else:
                 st.info("Nenhum passageiro registrado para esta viagem ainda.")
 else:
@@ -62,8 +90,10 @@ with st.sidebar:
     opcao = st.radio(
         "Escolha uma operação:",
         ["Universitários", "Transportes", "Reservas", "Viagens"],
-        key="menu_opcoes"
+        key="menu_opcoes",
+        index=["Universitários", "Transportes", "Reservas", "Viagens"].index(st.session_state.current_tab)
     )
+    st.session_state.current_tab = opcao
 
 if opcao == "Universitários":
     st.subheader("👨‍🎓 Gestão de Universitários")
@@ -85,8 +115,7 @@ if opcao == "Universitários":
                 if nome and matricula and universidade and telefone:
                     id_gerado = CRUD.inserir_universitario(nome, matricula, universidade, telefone)
                     if id_gerado:
-                        st.success(f"✅ Universitário cadastrado com sucesso! ID: {id_gerado}")
-                        st.balloons()
+                        handle_action("cadastro_universitario", True, f"✅ Universitário cadastrado com sucesso! ID: {id_gerado}")
                         st.rerun()
                 else:
                     st.warning("⚠️ Por favor, preencha todos os campos!")
@@ -103,10 +132,27 @@ if opcao == "Universitários":
                     with col2:
                         st.write(f"**Telefone:** {u['telefone']}")
                     
-                    if st.button("🗑️ Excluir", key=get_unique_key("del_univ", u['id'])):
-                        if CRUD.deletar_universitario(u['id']):
-                            st.success("Universitário excluído com sucesso!")
-                            st.rerun()
+                    # Botão de exclusão com confirmação
+                    delete_key = get_unique_key("del_univ", u['id'])
+                    if delete_key not in st.session_state:
+                        st.session_state[delete_key] = False
+
+                    if st.button("🗑️ Excluir", key=delete_key):
+                        st.session_state[delete_key] = True
+                        
+                    if st.session_state[delete_key]:
+                        st.warning("Tem certeza que deseja excluir este universitário?")
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            if st.button("✅ Sim", key=f"confirm_{delete_key}"):
+                                if CRUD.deletar_universitario(u['id']):
+                                    handle_action("delete_universitario", True, "Universitário excluído com sucesso!")
+                                    st.session_state[delete_key] = False
+                                    st.rerun()
+                        with col2:
+                            if st.button("❌ Não", key=f"cancel_{delete_key}"):
+                                st.session_state[delete_key] = False
+                                st.rerun()
         else:
             st.info("Nenhum universitário cadastrado ainda.")
 
@@ -130,8 +176,7 @@ elif opcao == "Transportes":
                 if placa and tipo and modelo and numero_vagas:
                     id_gerado = CRUD.inserir_transporte(placa, tipo, modelo, numero_vagas)
                     if id_gerado:
-                        st.success(f"✅ Transporte cadastrado com sucesso! ID: {id_gerado}")
-                        st.balloons()
+                        handle_action("cadastro_transporte", True, f"✅ Transporte cadastrado com sucesso! ID: {id_gerado}")
                         st.rerun()
                 else:
                     st.warning("⚠️ Por favor, preencha todos os campos!")
@@ -148,9 +193,27 @@ elif opcao == "Transportes":
                     with col2:
                         st.write(f"**Vagas:** {t['numero_de_vagas']}")
                     
-                    if st.button("🗑️ Excluir", key=get_unique_key("del_transp", t['id'])):
-                        # Lógica de exclusão aqui
-                        st.rerun()
+                    # Botão de exclusão com confirmação
+                    delete_key = get_unique_key("del_transp", t['id'])
+                    if delete_key not in st.session_state:
+                        st.session_state[delete_key] = False
+
+                    if st.button("🗑️ Excluir", key=delete_key):
+                        st.session_state[delete_key] = True
+                        
+                    if st.session_state[delete_key]:
+                        st.warning("Tem certeza que deseja excluir este transporte?")
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            if st.button("✅ Sim", key=f"confirm_{delete_key}"):
+                                # Adicionar lógica de exclusão aqui
+                                handle_action("delete_transporte", True, "Transporte excluído com sucesso!")
+                                st.session_state[delete_key] = False
+                                st.rerun()
+                        with col2:
+                            if st.button("❌ Não", key=f"cancel_{delete_key}"):
+                                st.session_state[delete_key] = False
+                                st.rerun()
         else:
             st.info("Nenhum transporte cadastrado ainda.")
 
@@ -184,12 +247,11 @@ elif opcao == "Reservas":
                     )
                     
                     if resultado["sucesso"]:
-                        st.success(f"✅ {resultado['mensagem']}")
+                        handle_action("cadastro_reserva", True, resultado["mensagem"])
                         if resultado["status"] == "Confirmado":
                             st.success("🚌 Reserva confirmada para a próxima viagem disponível!")
                         else:
                             st.info("⏳ Reserva em espera. Será automaticamente associada quando houver uma viagem disponível.")
-                        st.balloons()
                         st.rerun()
                     else:
                         st.error(resultado["mensagem"])
@@ -216,12 +278,27 @@ elif opcao == "Reservas":
                         with col3:
                             st.write(f"**Status:** {r['status']}")
                         
-                        if st.button("🗑️ Excluir Reserva", key=get_unique_key("del_res_conf", r['id'])):
-                            if CRUD.excluir_reserva(r['id']):
-                                st.success("Reserva excluída com sucesso!")
-                                st.rerun()
-                            else:
-                                st.error("Erro ao excluir reserva.")
+                        # Botão de exclusão com confirmação
+                        delete_key = get_unique_key("del_res_conf", r['id'])
+                        if delete_key not in st.session_state:
+                            st.session_state[delete_key] = False
+
+                        if st.button("🗑️ Excluir Reserva", key=delete_key):
+                            st.session_state[delete_key] = True
+                            
+                        if st.session_state[delete_key]:
+                            st.warning("Tem certeza que deseja excluir esta reserva?")
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                if st.button("✅ Sim", key=f"confirm_{delete_key}"):
+                                    if CRUD.excluir_reserva(r['id']):
+                                        handle_action("delete_reserva", True, "Reserva excluída com sucesso!")
+                                        st.session_state[delete_key] = False
+                                        st.rerun()
+                            with col2:
+                                if st.button("❌ Não", key=f"cancel_{delete_key}"):
+                                    st.session_state[delete_key] = False
+                                    st.rerun()
             
             # Mostrar reservas pendentes
             if reservas_pendentes:
@@ -236,12 +313,27 @@ elif opcao == "Reservas":
                         with col3:
                             st.write(f"**Status:** {r['status']}")
                         
-                        if st.button("🗑️ Excluir Reserva", key=get_unique_key("del_res_pend", r['id'])):
-                            if CRUD.excluir_reserva(r['id']):
-                                st.success("Reserva excluída com sucesso!")
-                                st.rerun()
-                            else:
-                                st.error("Erro ao excluir reserva.")
+                        # Botão de exclusão com confirmação
+                        delete_key = get_unique_key("del_res_pend", r['id'])
+                        if delete_key not in st.session_state:
+                            st.session_state[delete_key] = False
+
+                        if st.button("🗑️ Excluir Reserva", key=delete_key):
+                            st.session_state[delete_key] = True
+                            
+                        if st.session_state[delete_key]:
+                            st.warning("Tem certeza que deseja excluir esta reserva?")
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                if st.button("✅ Sim", key=f"confirm_{delete_key}"):
+                                    if CRUD.excluir_reserva(r['id']):
+                                        handle_action("delete_reserva", True, "Reserva excluída com sucesso!")
+                                        st.session_state[delete_key] = False
+                                        st.rerun()
+                            with col2:
+                                if st.button("❌ Não", key=f"cancel_{delete_key}"):
+                                    st.session_state[delete_key] = False
+                                    st.rerun()
         else:
             st.info("Nenhuma reserva cadastrada ainda.")
 
@@ -269,10 +361,10 @@ elif opcao == "Viagens":
                     if CRUD.associar_transporte_viagem(transporte['id'], viagem_id):
                         # Associar reservas pendentes
                         num_reservas = CRUD.associar_reservas_pendentes_viagem(viagem_id)
-                        st.success(f"✅ Viagem criada com sucesso! {num_reservas} reservas pendentes foram associadas.")
+                        mensagem = f"✅ Viagem criada com sucesso! {num_reservas} reservas pendentes foram associadas."
+                        handle_action("cadastro_viagem", True, mensagem)
                         if num_reservas > 0:
                             st.info(f"ℹ️ {num_reservas} reservas pendentes foram automaticamente confirmadas para esta viagem.")
-                        st.balloons()
                         st.rerun()
     
     with tab2:
@@ -284,27 +376,39 @@ elif opcao == "Viagens":
                     with col1:
                         st.write(f"**Transporte:** {v['placa']} ({v['tipo_van_onibus']})")
                     with col2:
-                        if st.button("🗑️ Excluir Viagem", key=get_unique_key("del_viag", v['id'])):
-                            if CRUD.excluir_viagem(v['id']):
-                                st.success("Viagem excluída com sucesso!")
-                                st.rerun()
-                            else:
-                                st.error("Erro ao excluir viagem.")
+                        # Botão de exclusão com confirmação
+                        delete_key = get_unique_key("del_viag", v['id'])
+                        if delete_key not in st.session_state:
+                            st.session_state[delete_key] = False
+
+                        if st.button("🗑️ Excluir Viagem", key=delete_key):
+                            st.session_state[delete_key] = True
+                            
+                        if st.session_state[delete_key]:
+                            st.warning("Tem certeza que deseja excluir esta viagem?")
+                            col1, col2 = st.columns(2)
+                            with col1:
+                                if st.button("✅ Sim", key=f"confirm_{delete_key}"):
+                                    if CRUD.excluir_viagem(v['id']):
+                                        handle_action("delete_viagem", True, "Viagem excluída com sucesso!")
+                                        st.session_state[delete_key] = False
+                                        st.rerun()
+                            with col2:
+                                if st.button("❌ Não", key=f"cancel_{delete_key}"):
+                                    st.session_state[delete_key] = False
+                                    st.rerun()
                     
                     # Lista de passageiros da viagem
                     st.subheader("📋 Lista de Passageiros")
                     passageiros = CRUD.listar_passageiros_por_viagem(v['id'])
                     if passageiros:
-                        data = []
-                        for p in passageiros:
-                            data.append({
-                                "Nome": p['nome_universitario'],
-                                "Matrícula": p['matricula'],
-                                "Embarque": p['ponto_de_embarque'],
-                                "Desembarque": p['ponto_de_desembarque'],
-                                "Status": p['status_reserva']
-                            })
-                        st.table(data)
+                        st.table([{
+                            "Nome": p['nome_universitario'],
+                            "Matrícula": p['matricula'],
+                            "Embarque": p['ponto_de_embarque'],
+                            "Desembarque": p['ponto_de_desembarque'],
+                            "Status": p['status_reserva']
+                        } for p in passageiros])
                     else:
                         st.info("Nenhum passageiro registrado para esta viagem ainda.")
         else:
