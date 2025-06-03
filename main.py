@@ -11,6 +11,15 @@ st.set_page_config(
     layout="wide"
 )
 
+# Função para gerar chaves únicas para botões
+def get_unique_key(prefix, id_value):
+    """Gera uma chave única para componentes Streamlit."""
+    return f"{prefix}_{id_value}_{st.session_state.get('session_id', '')}"
+
+# Inicialização do estado da sessão
+if 'session_id' not in st.session_state:
+    st.session_state.session_id = str(hash(date.today()))
+
 # Interface do Streamlit
 st.title("🚌 Sistema de Gestão de Transporte Universitário")
 
@@ -52,7 +61,8 @@ with st.sidebar:
     st.header("Menu de Opções")
     opcao = st.radio(
         "Escolha uma operação:",
-        ["Universitários", "Transportes", "Reservas", "Viagens"]
+        ["Universitários", "Transportes", "Reservas", "Viagens"],
+        key="menu_opcoes"
     )
 
 if opcao == "Universitários":
@@ -61,7 +71,7 @@ if opcao == "Universitários":
     tab1, tab2 = st.tabs(["📝 Cadastrar", "📋 Listar"])
     
     with tab1:
-        with st.form("form_cadastro_universitario"):
+        with st.form("form_cadastro_universitario", clear_on_submit=True):
             col1, col2 = st.columns(2)
             with col1:
                 nome = st.text_input("Nome Completo")
@@ -69,7 +79,7 @@ if opcao == "Universitários":
             with col2:
                 universidade = st.text_input("Universidade")
                 telefone = st.text_input("Telefone")
-            
+
             submitted = st.form_submit_button("Cadastrar Universitário")
             if submitted:
                 if nome and matricula and universidade and telefone:
@@ -77,6 +87,7 @@ if opcao == "Universitários":
                     if id_gerado:
                         st.success(f"✅ Universitário cadastrado com sucesso! ID: {id_gerado}")
                         st.balloons()
+                        st.rerun()
                 else:
                     st.warning("⚠️ Por favor, preencha todos os campos!")
     
@@ -92,7 +103,7 @@ if opcao == "Universitários":
                     with col2:
                         st.write(f"**Telefone:** {u['telefone']}")
                     
-                    if st.button(f"🗑️ Excluir", key=f"del_univ_{u['id']}"):
+                    if st.button("🗑️ Excluir", key=get_unique_key("del_univ", u['id'])):
                         if CRUD.deletar_universitario(u['id']):
                             st.success("Universitário excluído com sucesso!")
                             st.rerun()
@@ -105,7 +116,7 @@ elif opcao == "Transportes":
     tab1, tab2 = st.tabs(["📝 Cadastrar", "📋 Listar"])
     
     with tab1:
-        with st.form("form_cadastro_transporte"):
+        with st.form("form_cadastro_transporte", clear_on_submit=True):
             col1, col2 = st.columns(2)
             with col1:
                 placa = st.text_input("Placa")
@@ -121,6 +132,7 @@ elif opcao == "Transportes":
                     if id_gerado:
                         st.success(f"✅ Transporte cadastrado com sucesso! ID: {id_gerado}")
                         st.balloons()
+                        st.rerun()
                 else:
                     st.warning("⚠️ Por favor, preencha todos os campos!")
     
@@ -135,6 +147,12 @@ elif opcao == "Transportes":
                         st.write(f"**Modelo:** {t['modelo']}")
                     with col2:
                         st.write(f"**Vagas:** {t['numero_de_vagas']}")
+                    
+                    if st.button("🗑️ Excluir", key=get_unique_key("del_transp", t['id'])):
+                        # Lógica de exclusão aqui
+                        st.rerun()
+        else:
+            st.info("Nenhum transporte cadastrado ainda.")
 
 elif opcao == "Reservas":
     st.subheader("🎫 Gestão de Reservas")
@@ -142,10 +160,13 @@ elif opcao == "Reservas":
     tab1, tab2 = st.tabs(["📝 Nova Reserva", "📋 Listar Reservas"])
     
     with tab1:
-        with st.form("form_cadastro_reserva"):
-            universitario = st.selectbox("Universitário", 
-                                       options=CRUD.listar_universitarios(),
-                                       format_func=lambda x: f"{x['nome']} ({x['matricula']})")
+        with st.form("form_cadastro_reserva", clear_on_submit=True):
+            universitario = st.selectbox(
+                "Universitário", 
+                options=CRUD.listar_universitarios(),
+                format_func=lambda x: f"{x['nome']} ({x['matricula']})",
+                key="select_universitario"
+            )
             
             col1, col2 = st.columns(2)
             with col1:
@@ -156,7 +177,6 @@ elif opcao == "Reservas":
             submitted = st.form_submit_button("Criar Reserva")
             if submitted:
                 if universitario and ponto_embarque and ponto_desembarque:
-                    # Criar reserva completa
                     resultado = CRUD.criar_reserva_completa(
                         universitario['id'],
                         ponto_embarque,
@@ -196,7 +216,7 @@ elif opcao == "Reservas":
                         with col3:
                             st.write(f"**Status:** {r['status']}")
                         
-                        if st.button("🗑️ Excluir Reserva", key=f"del_res_{r['id']}"):
+                        if st.button("🗑️ Excluir Reserva", key=get_unique_key("del_res_conf", r['id'])):
                             if CRUD.excluir_reserva(r['id']):
                                 st.success("Reserva excluída com sucesso!")
                                 st.rerun()
@@ -216,7 +236,7 @@ elif opcao == "Reservas":
                         with col3:
                             st.write(f"**Status:** {r['status']}")
                         
-                        if st.button("🗑️ Excluir Reserva", key=f"del_res_{r['id']}"):
+                        if st.button("🗑️ Excluir Reserva", key=get_unique_key("del_res_pend", r['id'])):
                             if CRUD.excluir_reserva(r['id']):
                                 st.success("Reserva excluída com sucesso!")
                                 st.rerun()
@@ -231,11 +251,14 @@ elif opcao == "Viagens":
     tab1, tab2 = st.tabs(["📝 Nova Viagem", "📋 Listar Viagens"])
     
     with tab1:
-        with st.form("form_cadastro_viagem"):
+        with st.form("form_cadastro_viagem", clear_on_submit=True):
             data_viagem = st.date_input("Data da Viagem", min_value=date.today())
-            transporte = st.selectbox("Transporte", 
-                                    options=CRUD.listar_transportes(),
-                                    format_func=lambda x: f"{x['placa']} - {x['tipo_van_onibus']} ({x['numero_de_vagas']} vagas)")
+            transporte = st.selectbox(
+                "Transporte", 
+                options=CRUD.listar_transportes(),
+                format_func=lambda x: f"{x['placa']} - {x['tipo_van_onibus']} ({x['numero_de_vagas']} vagas)",
+                key="select_transporte"
+            )
             
             submitted = st.form_submit_button("Criar Viagem")
             if submitted and transporte:
@@ -261,7 +284,7 @@ elif opcao == "Viagens":
                     with col1:
                         st.write(f"**Transporte:** {v['placa']} ({v['tipo_van_onibus']})")
                     with col2:
-                        if st.button("🗑️ Excluir Viagem", key=f"del_viag_{v['id']}"):
+                        if st.button("🗑️ Excluir Viagem", key=get_unique_key("del_viag", v['id'])):
                             if CRUD.excluir_viagem(v['id']):
                                 st.success("Viagem excluída com sucesso!")
                                 st.rerun()
