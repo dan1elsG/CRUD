@@ -7,16 +7,26 @@ import streamlit as st
 # Carrega as variáveis de ambiente
 load_dotenv()
 
-# Configurações do banco de dados
 def get_db_config():
-    """Retorna as configurações do banco de dados."""
-    return {
-        'host': st.secrets.get("DB_HOST") or os.getenv('DB_HOST', 'localhost'),
-        'database': st.secrets.get("DB_NAME") or os.getenv('DB_NAME', 'transporte_universitario'),
-        'user': st.secrets.get("DB_USER") or os.getenv('DB_USER', 'postgres'),
-        'password': st.secrets.get("DB_PASS") or os.getenv('DB_PASS', ''),
-        'port': st.secrets.get("DB_PORT") or os.getenv('DB_PORT', '5432')
-    }
+    """Retorna as configurações do banco de dados do Supabase."""
+    # Para desenvolvimento local
+    if os.getenv('DB_HOST'):
+        return {
+            'host': os.getenv('DB_HOST', 'localhost'),
+            'database': os.getenv('DB_NAME', 'transporte_universitario'),
+            'user': os.getenv('DB_USER', 'postgres'),
+            'password': os.getenv('DB_PASS', ''),
+            'port': os.getenv('DB_PORT', '5432')
+        }
+    # Para Streamlit Cloud - usando secrets
+    else:
+        return {
+            'host': st.secrets["db_host"],
+            'database': st.secrets["db_name"],
+            'user': st.secrets["db_user"],
+            'password': st.secrets["db_pass"],
+            'port': st.secrets["db_port"]
+        }
 
 @contextmanager
 def conectar():
@@ -32,16 +42,10 @@ def conectar():
         yield conn
     except psycopg2.OperationalError as e:
         st.error(f"❌ Erro de conexão com o banco de dados: {e}")
-        st.info("Tentando reconectar...")
-        try:
-            if conn:
-                conn.close()
-            conn = psycopg2.connect(**get_db_config())
-            conn.autocommit = True
-            yield conn
-        except psycopg2.Error as e:
-            st.error(f"❌ Falha na reconexão: {e}")
-            raise
+        st.error("Verifique se as credenciais do banco de dados estão configuradas corretamente nos secrets do Streamlit.")
+        st.info("Para desenvolvimento local, use um arquivo .env com as configurações do banco.")
+        st.info("Para deploy no Streamlit Cloud, configure os secrets do projeto.")
+        raise
     except psycopg2.Error as e:
         st.error(f"❌ Erro no banco de dados: {e}")
         if conn:
@@ -68,30 +72,8 @@ def verificar_conexao():
 
 # Função para criar o banco de dados e as tabelas
 def criar_banco_dados():
-    """Cria o banco de dados e as tabelas necessárias."""
-    config = get_db_config()
+    """Cria as tabelas necessárias no banco de dados."""
     try:
-        # Primeiro tenta conectar ao banco postgres para criar o banco de dados
-        conn = psycopg2.connect(
-            host=config['host'],
-            user=config['user'],
-            password=config['password'],
-            port=config['port'],
-            database='postgres'
-        )
-        conn.autocommit = True
-        
-        with conn.cursor() as cur:
-            # Verifica se o banco de dados existe
-            cur.execute(f"SELECT 1 FROM pg_database WHERE datname = '{config['database']}'")
-            if not cur.fetchone():
-                # Cria o banco de dados se não existir
-                cur.execute(f"CREATE DATABASE {config['database']}")
-                st.success(f"✅ Banco de dados '{config['database']}' criado com sucesso!")
-        
-        conn.close()
-        
-        # Agora conecta ao banco criado para criar as tabelas
         with conectar() as conn:
             with conn.cursor() as cur:
                 # Lê o arquivo SQL
@@ -99,10 +81,9 @@ def criar_banco_dados():
                     sql_commands = file.read()
                 cur.execute(sql_commands)
                 st.success("✅ Tabelas criadas com sucesso!")
-        
         return True
     except Exception as e:
-        st.error(f"❌ Erro ao criar banco de dados: {e}")
+        st.error(f"❌ Erro ao criar tabelas: {e}")
         return False
 
 # Verifica a conexão ao iniciar
