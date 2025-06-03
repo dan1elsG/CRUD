@@ -1,21 +1,21 @@
 # Sistema de Transporte Universitário
 
-Este é um sistema de gerenciamento de transporte universitário que utiliza PostgreSQL como banco de dados.
+Sistema de gerenciamento de transporte universitário desenvolvido com Python, Streamlit e PostgreSQL.
 
-## Estrutura do Banco de Dados
+## 🗄️ Estrutura do Banco de Dados
 
 O sistema utiliza as seguintes tabelas:
-- `Universitario`: Armazena informações dos estudantes
-- `ReservaTransporte`: Gerencia as reservas de transporte
-- `Transporte`: Cadastro de veículos
-- `Viagem`: Registro de viagens
-- Tabelas de relacionamento para gestão das associações
+- `Universitario`: Cadastro de estudantes
+- `ReservaTransporte`: Gestão de reservas
+- `Transporte`: Registro de veículos
+- `Viagem`: Controle de viagens
+- Tabelas de relacionamento para associações
 
-## Configuração do Ambiente
+## 🚀 Configuração
 
 ### Pré-requisitos
-- PostgreSQL instalado e rodando
-- Python 3.x
+- PostgreSQL 12 ou superior
+- Python 3.8 ou superior
 - pip (gerenciador de pacotes Python)
 
 ### Instalação
@@ -26,63 +26,60 @@ git clone [URL_DO_REPOSITORIO]
 cd [NOME_DO_DIRETORIO]
 ```
 
-2. Instale as dependências:
+2. Crie e ative um ambiente virtual:
 ```bash
-pip install psycopg2-binary python-dotenv
+# Windows
+python -m venv venv
+venv\Scripts\activate
+
+# Linux/Mac
+python3 -m venv venv
+source venv/bin/activate
 ```
 
-3. Configure as variáveis de ambiente:
-Crie um arquivo `.env` na raiz do projeto com as seguintes informações:
-```
-DB_HOST=localhost
-DB_NAME=transporte_universitario
-DB_USER=postgres
-DB_PASS=sua_senha_aqui
-DB_PORT=5432
-```
-
-4. Execute o script de configuração do banco de dados:
+3. Instale as dependências:
 ```bash
-python setup_database.py
+pip install -r requirements.txt
 ```
 
-## Estrutura do Projeto
+4. Configure o banco de dados:
+```bash
+# Conecte ao PostgreSQL
+psql -U postgres
 
-- `database_schema.sql`: Definição das tabelas do banco de dados
-- `setup_database.py`: Script para criar o banco de dados e as tabelas
-- `.env`: Arquivo de configuração (você precisa criar)
+# Execute o script de criação do banco
+\i create_tables.sql
+```
 
-## Uso
-
-Após a configuração, o banco de dados estará pronto para uso com as seguintes funcionalidades:
+## 📊 Funcionalidades
 
 1. Gestão de Universitários
-   - Cadastro de estudantes
-   - Registro de informações de contato
+   - Cadastro e atualização de estudantes
+   - Controle de matrículas
 
-2. Gestão de Transportes
+2. Sistema de Reservas
+   - Criação de reservas de transporte
+   - Definição de pontos de embarque/desembarque
+   - Status de reserva (Pendente/Confirmado)
+
+3. Controle de Transportes
    - Cadastro de veículos
-   - Controle de capacidade
-
-3. Sistema de Reservas
-   - Criação de reservas
-   - Associação com viagens
-   - Controle de status
+   - Gestão de capacidade
+   - Tipos de transporte (van/ônibus)
 
 4. Gestão de Viagens
    - Agendamento de viagens
    - Associação com transportes
    - Controle de passageiros
 
-## Contribuição
+## 🤝 Contribuição
 
-Para contribuir com o projeto:
-1. Faça um fork do repositório
-2. Crie uma branch para sua feature
-3. Faça commit das suas alterações
-4. Faça push para a branch
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/NovaFeature`)
+3. Faça commit das alterações (`git commit -m 'Adiciona nova feature'`)
+4. Push para a branch (`git push origin feature/NovaFeature`)
 5. Abra um Pull Request
 
-## Licença
+## 📝 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes. 
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes. 

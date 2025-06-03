@@ -1,46 +1,33 @@
-# Python
+# Ambiente virtual
+venv/
+env/
+.env
+
+# Cache Python
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-.Python
-build/
-develop-eggs/
+
+# Distribuição / empacotamento
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
+build/
 *.egg-info/
-.installed.cfg
-*.egg
 
-# Virtual Environment
-venv/
-env/
-ENV/
-
-# IDE
+# IDEs e editores
 .idea/
 .vscode/
 *.swp
 *.swo
 
-# Database
-*.db
-*.sqlite3
-
-# Environment variables
-.env
-
-# Logs
-*.log
-
-# System Files
+# Arquivos de sistema
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Logs e bancos de dados locais
+*.log
+*.sqlite
+*.db
+
+# Arquivos temporários
+tmp/
+temp/ 
