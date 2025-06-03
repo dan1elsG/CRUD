@@ -1,130 +1,88 @@
-# Sistema de Gestão de Transporte Universitário 🚌
+# Sistema de Transporte Universitário
 
-Um sistema web desenvolvido com Python e Streamlit para gerenciar o transporte universitário, incluindo cadastro de estudantes, reservas de viagens e gestão de veículos.
+Este é um sistema de gerenciamento de transporte universitário que utiliza PostgreSQL como banco de dados.
 
-## Funcionalidades 🎯
+## Estrutura do Banco de Dados
 
-- Gestão de Universitários
-  - Cadastro de estudantes
-  - Listagem e exclusão de registros
-  - Informações completas (nome, matrícula, universidade, telefone)
+O sistema utiliza as seguintes tabelas:
+- `Universitario`: Armazena informações dos estudantes
+- `ReservaTransporte`: Gerencia as reservas de transporte
+- `Transporte`: Cadastro de veículos
+- `Viagem`: Registro de viagens
+- Tabelas de relacionamento para gestão das associações
 
-- Gestão de Transportes
-  - Cadastro de veículos (ônibus/van)
-  - Controle de capacidade
-  - Informações do veículo (placa, modelo, número de vagas)
+## Configuração do Ambiente
 
-- Sistema de Reservas
-  - Criação de reservas de transporte
-  - Associação automática com viagens disponíveis
-  - Status de reserva (Pendente/Confirmado)
-  - Pontos de embarque e desembarque
+### Pré-requisitos
+- PostgreSQL instalado e rodando
+- Python 3.x
+- pip (gerenciador de pacotes Python)
 
-- Gestão de Viagens
-  - Agendamento de viagens
-  - Associação automática de reservas pendentes
-  - Lista de passageiros por viagem
-  - Controle de capacidade do veículo
-
-## Tecnologias Utilizadas 💻
-
-- Python
-- Streamlit
-- PostgreSQL
-- psycopg2
-
-## Requisitos 📋
-
-- Python 3.8+
-- PostgreSQL
-- Bibliotecas Python (ver requirements.txt)
-
-## Instalação 🚀
+### Instalação
 
 1. Clone o repositório:
 ```bash
 git clone [URL_DO_REPOSITORIO]
-cd sistema-transporte-universitario
+cd [NOME_DO_DIRETORIO]
 ```
 
-2. Crie e ative um ambiente virtual:
+2. Instale as dependências:
 ```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
+pip install psycopg2-binary python-dotenv
 ```
 
-3. Instale as dependências:
+3. Configure as variáveis de ambiente:
+Crie um arquivo `.env` na raiz do projeto com as seguintes informações:
+```
+DB_HOST=localhost
+DB_NAME=transporte_universitario
+DB_USER=postgres
+DB_PASS=sua_senha_aqui
+DB_PORT=5432
+```
+
+4. Execute o script de configuração do banco de dados:
 ```bash
-pip install -r requirements.txt
+python setup_database.py
 ```
 
-4. Configure o banco de dados:
+## Estrutura do Projeto
 
-   a. Crie um arquivo `.env` na raiz do projeto com as seguintes configurações:
-   ```env
-   # Configurações do Banco de Dados PostgreSQL
-   DB_HOST=localhost
-   DB_NAME=transporte_universitario
-   DB_USER=seu_usuario
-   DB_PASS=sua_senha
-   DB_PORT=5432
-   ```
+- `database_schema.sql`: Definição das tabelas do banco de dados
+- `setup_database.py`: Script para criar o banco de dados e as tabelas
+- `.env`: Arquivo de configuração (você precisa criar)
 
-   b. Crie o banco de dados no PostgreSQL:
-   ```sql
-   CREATE DATABASE transporte_universitario;
-   ```
+## Uso
 
-   c. Execute o script de configuração do banco de dados:
-   ```bash
-   python setup_database.py
-   ```
+Após a configuração, o banco de dados estará pronto para uso com as seguintes funcionalidades:
 
-5. Execute o aplicativo:
-```bash
-streamlit run main.py
-```
+1. Gestão de Universitários
+   - Cadastro de estudantes
+   - Registro de informações de contato
 
-## Estrutura do Projeto 📁
+2. Gestão de Transportes
+   - Cadastro de veículos
+   - Controle de capacidade
 
-```
-sistema-transporte-universitario/
-├── main.py              # Aplicativo principal Streamlit
-├── CRUD.py             # Operações do banco de dados
-├── DATABASE.py         # Configuração de conexão
-├── setup_database.py   # Script de configuração do banco
-├── database_schema.sql # Estrutura do banco de dados
-├── requirements.txt    # Dependências do projeto
-├── .env               # Variáveis de ambiente (não versionado)
-└── README.md          # Documentação
-```
+3. Sistema de Reservas
+   - Criação de reservas
+   - Associação com viagens
+   - Controle de status
 
-## Banco de Dados 🗄️
+4. Gestão de Viagens
+   - Agendamento de viagens
+   - Associação com transportes
+   - Controle de passageiros
 
-O sistema utiliza PostgreSQL com as seguintes tabelas:
+## Contribuição
 
-- `Universitario`: Armazena dados dos estudantes
-- `Transporte`: Cadastro de veículos
-- `Viagem`: Registro de viagens
-- `ReservaTransporte`: Gestão de reservas
-- Tabelas de relacionamento:
-  - `Universitario_Realiza_Reserva`
-  - `ReservaTransporte_Para_Viagem`
-  - `Transporte_Realiza_Viagem`
-
-Para recriar o banco de dados:
-1. Certifique-se de ter as variáveis de ambiente configuradas no `.env`
-2. Execute `python setup_database.py`
-
-## Contribuição 🤝
-
-1. Faça um Fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
+Para contribuir com o projeto:
+1. Faça um fork do repositório
+2. Crie uma branch para sua feature
+3. Faça commit das suas alterações
+4. Faça push para a branch
 5. Abra um Pull Request
 
-## Licença 📄
+## Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes. 
+Este projeto está sob a licença MIT. Veja o arquivo LICENSE para mais detalhes. 
