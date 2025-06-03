@@ -1,7 +1,7 @@
 import streamlit as st
 import psycopg2
 from psycopg2.extras import RealDictCursor
-from DATABASE import conectar, verificar_conexao, criar_banco_dados
+from DATABASE import conectar, verificar_conexao
 from datetime import date
 import CRUD
 
@@ -13,13 +13,8 @@ st.set_page_config(
 
 # Verificar conexão com o banco de dados
 if not verificar_conexao():
-    st.warning("⚠️ Tentando criar o banco de dados...")
-    if criar_banco_dados():
-        st.success("✅ Banco de dados criado com sucesso!")
-        st.rerun()
-    else:
-        st.error("❌ Não foi possível criar o banco de dados. Verifique as configurações.")
-        st.stop()
+    st.error("❌ Não foi possível conectar ao banco de dados. Verifique as configurações.")
+    st.stop()
 
 # Inicialização do estado da sessão
 if 'session_id' not in st.session_state:
@@ -134,7 +129,6 @@ if opcao == "Universitários":
                     
                     # Botões de exclusão
                     delete_key = get_unique_key("del_univ", u['id'])
-                    confirm_key = get_unique_key("confirm_del_univ", u['id'])
                     
                     if delete_key not in st.session_state:
                         st.session_state[delete_key] = False
@@ -152,10 +146,10 @@ if opcao == "Universitários":
                                     st.session_state[delete_key] = False
                                     handle_action("delete_universitario", True, "Universitário excluído com sucesso!")
                                     st.rerun()
-                            with col2:
-                                if st.button("❌ Não", key=f"cancel_del_{u['id']}"):
-                                    st.session_state[delete_key] = False
-                                    st.rerun()
+                        with col2:
+                            if st.button("❌ Não", key=f"cancel_del_{u['id']}"):
+                                st.session_state[delete_key] = False
+                                st.rerun()
         else:
             st.info("Nenhum universitário cadastrado ainda.")
 
@@ -196,7 +190,7 @@ elif opcao == "Transportes":
                     with col2:
                         st.write(f"**Vagas:** {t['numero_de_vagas']}")
                     
-                    # Botões de exclusão para transportes
+                    # Botões de exclusão
                     delete_key = get_unique_key("del_transp", t['id'])
                     
                     if delete_key not in st.session_state:
@@ -211,10 +205,10 @@ elif opcao == "Transportes":
                         col1, col2 = st.columns(2)
                         with col1:
                             if st.button("✅ Sim", key=f"confirm_transp_del_{t['id']}"):
-                                # Adicionar lógica de exclusão aqui
-                                handle_action("delete_transporte", True, "Transporte excluído com sucesso!")
-                                st.session_state[delete_key] = False
-                                st.rerun()
+                                if CRUD.excluir_transporte(t['id']):
+                                    handle_action("delete_transporte", True, "Transporte excluído com sucesso!")
+                                    st.session_state[delete_key] = False
+                                    st.rerun()
                         with col2:
                             if st.button("❌ Não", key=f"cancel_transp_del_{t['id']}"):
                                 st.session_state[delete_key] = False
@@ -232,7 +226,7 @@ elif opcao == "Reservas":
             universitario = st.selectbox(
                 "Universitário", 
                 options=CRUD.listar_universitarios(),
-                format_func=lambda x: f"{x['nome']} ({x['matricula']})",
+                format_func=lambda x: f"{x['nome']} ({x['matricula']})" if x else "Selecione um universitário",
                 key="select_universitario"
             )
             
@@ -283,7 +277,7 @@ elif opcao == "Reservas":
                         with col3:
                             st.write(f"**Status:** {r['status']}")
                         
-                        # Botões de exclusão para reservas
+                        # Botões de exclusão
                         delete_key = get_unique_key("del_res", r['id'])
                         
                         if delete_key not in st.session_state:
@@ -320,7 +314,7 @@ elif opcao == "Reservas":
                         with col3:
                             st.write(f"**Status:** {r['status']}")
                         
-                        # Botões de exclusão para reservas
+                        # Botões de exclusão
                         delete_key = get_unique_key("del_res", r['id'])
                         
                         if delete_key not in st.session_state:
@@ -357,7 +351,7 @@ elif opcao == "Viagens":
             transporte = st.selectbox(
                 "Transporte", 
                 options=CRUD.listar_transportes(),
-                format_func=lambda x: f"{x['placa']} - {x['tipo_van_onibus']} ({x['numero_de_vagas']} vagas)",
+                format_func=lambda x: f"{x['placa']} - {x['tipo_van_onibus']} ({x['numero_de_vagas']} vagas)" if x else "Selecione um transporte",
                 key="select_transporte"
             )
             
@@ -385,7 +379,7 @@ elif opcao == "Viagens":
                     with col1:
                         st.write(f"**Transporte:** {v['placa']} ({v['tipo_van_onibus']})")
                     with col2:
-                        # Botões de exclusão para viagens
+                        # Botões de exclusão
                         delete_key = get_unique_key("del_viag", v['id'])
                         
                         if delete_key not in st.session_state:

@@ -100,6 +100,18 @@ def listar_transportes() -> List[Dict[str, Union[int, str]]]:
         print(f"Erro ao listar transportes: {e}")
         return []
 
+def excluir_transporte(transporte_id: int) -> bool:
+    """Exclui um transporte pelo ID."""
+    try:
+        with conectar() as conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM Transporte WHERE id = %s", (transporte_id,))
+                conn.commit()
+                return True
+    except Exception as e:
+        print(f"Erro ao excluir transporte: {e}")
+        return False
+
 # Funções para Reserva
 def inserir_reserva(ponto_embarque: str, ponto_desembarque: str, status: str = "Pendente") -> Optional[int]:
     """Insere uma nova reserva de transporte."""
