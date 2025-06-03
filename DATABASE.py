@@ -1,50 +1,31 @@
-import os
 import psycopg2
-from dotenv import load_dotenv
+from psycopg2.extras import RealDictCursor
 from contextlib import contextmanager
 import streamlit as st
 
-# Carrega as variáveis de ambiente
-load_dotenv()
-
 def get_db_config():
-    """Retorna as configurações do banco de dados do Supabase."""
-    # Para desenvolvimento local
-    if os.getenv('DB_HOST'):
-        return {
-            'host': os.getenv('DB_HOST', 'localhost'),
-            'database': os.getenv('DB_NAME', 'transporte_universitario'),
-            'user': os.getenv('DB_USER', 'postgres'),
-            'password': os.getenv('DB_PASS', ''),
-            'port': os.getenv('DB_PORT', '5432')
-        }
-    # Para Streamlit Cloud - usando secrets
-    else:
-        return {
-            'host': st.secrets["db_host"],
-            'database': st.secrets["db_name"],
-            'user': st.secrets["db_user"],
-            'password': st.secrets["db_pass"],
-            'port': st.secrets["db_port"]
-        }
+    """Retorna as configurações do banco de dados."""
+    return {
+        'host': 'localhost',
+        'database': 'rota',
+        'user': 'postgres',
+        'password': '0000',
+        'port': '5432'
+    }
 
 @contextmanager
 def conectar():
     """
     Gerenciador de contexto para conexão com o banco de dados.
-    Tenta reconectar automaticamente em caso de erro.
     """
     conn = None
     try:
-        # Tenta estabelecer a conexão
         conn = psycopg2.connect(**get_db_config())
-        conn.autocommit = True  # Ativa autocommit
+        conn.autocommit = True
         yield conn
     except psycopg2.OperationalError as e:
         st.error(f"❌ Erro de conexão com o banco de dados: {e}")
-        st.error("Verifique se as credenciais do banco de dados estão configuradas corretamente nos secrets do Streamlit.")
-        st.info("Para desenvolvimento local, use um arquivo .env com as configurações do banco.")
-        st.info("Para deploy no Streamlit Cloud, configure os secrets do projeto.")
+        st.error("Verifique se o banco de dados está rodando e se as credenciais estão corretas.")
         raise
     except psycopg2.Error as e:
         st.error(f"❌ Erro no banco de dados: {e}")
@@ -55,7 +36,6 @@ def conectar():
         if conn:
             conn.close()
 
-# Função para verificar a conexão
 def verificar_conexao():
     """Verifica se é possível conectar ao banco de dados."""
     try:

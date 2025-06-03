@@ -36,7 +36,7 @@ if 'current_tab' not in st.session_state:
 # Função para gerar chaves únicas para botões
 def get_unique_key(prefix, id_value):
     """Gera uma chave única para componentes Streamlit."""
-    return f"{prefix}_{id_value}_{st.session_state.session_id}"
+    return f"{prefix}_{id_value}"
 
 # Função para lidar com ações e mensagens
 def handle_action(action_type, success, message=""):
@@ -132,27 +132,30 @@ if opcao == "Universitários":
                     with col2:
                         st.write(f"**Telefone:** {u['telefone']}")
                     
-                    # Botão de exclusão com confirmação
+                    # Botões de exclusão
                     delete_key = get_unique_key("del_univ", u['id'])
+                    confirm_key = get_unique_key("confirm_del_univ", u['id'])
+                    
                     if delete_key not in st.session_state:
                         st.session_state[delete_key] = False
-
-                    if st.button("🗑️ Excluir", key=delete_key):
-                        st.session_state[delete_key] = True
-                        
-                    if st.session_state[delete_key]:
+                    
+                    if not st.session_state[delete_key]:
+                        if st.button("🗑️ Excluir", key=f"del_btn_{u['id']}"):
+                            st.session_state[delete_key] = True
+                            st.rerun()
+                    else:
                         st.warning("Tem certeza que deseja excluir este universitário?")
                         col1, col2 = st.columns(2)
                         with col1:
-                            if st.button("✅ Sim", key=f"confirm_{delete_key}"):
+                            if st.button("✅ Sim", key=f"confirm_del_{u['id']}"):
                                 if CRUD.deletar_universitario(u['id']):
+                                    st.session_state[delete_key] = False
                                     handle_action("delete_universitario", True, "Universitário excluído com sucesso!")
+                                    st.rerun()
+                            with col2:
+                                if st.button("❌ Não", key=f"cancel_del_{u['id']}"):
                                     st.session_state[delete_key] = False
                                     st.rerun()
-                        with col2:
-                            if st.button("❌ Não", key=f"cancel_{delete_key}"):
-                                st.session_state[delete_key] = False
-                                st.rerun()
         else:
             st.info("Nenhum universitário cadastrado ainda.")
 
@@ -193,25 +196,27 @@ elif opcao == "Transportes":
                     with col2:
                         st.write(f"**Vagas:** {t['numero_de_vagas']}")
                     
-                    # Botão de exclusão com confirmação
+                    # Botões de exclusão para transportes
                     delete_key = get_unique_key("del_transp", t['id'])
+                    
                     if delete_key not in st.session_state:
                         st.session_state[delete_key] = False
-
-                    if st.button("🗑️ Excluir", key=delete_key):
-                        st.session_state[delete_key] = True
-                        
-                    if st.session_state[delete_key]:
+                    
+                    if not st.session_state[delete_key]:
+                        if st.button("🗑️ Excluir", key=f"del_transp_btn_{t['id']}"):
+                            st.session_state[delete_key] = True
+                            st.rerun()
+                    else:
                         st.warning("Tem certeza que deseja excluir este transporte?")
                         col1, col2 = st.columns(2)
                         with col1:
-                            if st.button("✅ Sim", key=f"confirm_{delete_key}"):
+                            if st.button("✅ Sim", key=f"confirm_transp_del_{t['id']}"):
                                 # Adicionar lógica de exclusão aqui
                                 handle_action("delete_transporte", True, "Transporte excluído com sucesso!")
                                 st.session_state[delete_key] = False
                                 st.rerun()
                         with col2:
-                            if st.button("❌ Não", key=f"cancel_{delete_key}"):
+                            if st.button("❌ Não", key=f"cancel_transp_del_{t['id']}"):
                                 st.session_state[delete_key] = False
                                 st.rerun()
         else:
@@ -278,25 +283,27 @@ elif opcao == "Reservas":
                         with col3:
                             st.write(f"**Status:** {r['status']}")
                         
-                        # Botão de exclusão com confirmação
-                        delete_key = get_unique_key("del_res_conf", r['id'])
+                        # Botões de exclusão para reservas
+                        delete_key = get_unique_key("del_res", r['id'])
+                        
                         if delete_key not in st.session_state:
                             st.session_state[delete_key] = False
-
-                        if st.button("🗑️ Excluir Reserva", key=delete_key):
-                            st.session_state[delete_key] = True
-                            
-                        if st.session_state[delete_key]:
+                        
+                        if not st.session_state[delete_key]:
+                            if st.button("🗑️ Excluir Reserva", key=f"del_res_btn_{r['id']}"):
+                                st.session_state[delete_key] = True
+                                st.rerun()
+                        else:
                             st.warning("Tem certeza que deseja excluir esta reserva?")
                             col1, col2 = st.columns(2)
                             with col1:
-                                if st.button("✅ Sim", key=f"confirm_{delete_key}"):
+                                if st.button("✅ Sim", key=f"confirm_res_del_{r['id']}"):
                                     if CRUD.excluir_reserva(r['id']):
                                         handle_action("delete_reserva", True, "Reserva excluída com sucesso!")
                                         st.session_state[delete_key] = False
                                         st.rerun()
                             with col2:
-                                if st.button("❌ Não", key=f"cancel_{delete_key}"):
+                                if st.button("❌ Não", key=f"cancel_res_del_{r['id']}"):
                                     st.session_state[delete_key] = False
                                     st.rerun()
             
@@ -313,25 +320,27 @@ elif opcao == "Reservas":
                         with col3:
                             st.write(f"**Status:** {r['status']}")
                         
-                        # Botão de exclusão com confirmação
-                        delete_key = get_unique_key("del_res_pend", r['id'])
+                        # Botões de exclusão para reservas
+                        delete_key = get_unique_key("del_res", r['id'])
+                        
                         if delete_key not in st.session_state:
                             st.session_state[delete_key] = False
-
-                        if st.button("🗑️ Excluir Reserva", key=delete_key):
-                            st.session_state[delete_key] = True
-                            
-                        if st.session_state[delete_key]:
+                        
+                        if not st.session_state[delete_key]:
+                            if st.button("🗑️ Excluir Reserva", key=f"del_res_btn_{r['id']}"):
+                                st.session_state[delete_key] = True
+                                st.rerun()
+                        else:
                             st.warning("Tem certeza que deseja excluir esta reserva?")
                             col1, col2 = st.columns(2)
                             with col1:
-                                if st.button("✅ Sim", key=f"confirm_{delete_key}"):
+                                if st.button("✅ Sim", key=f"confirm_res_del_{r['id']}"):
                                     if CRUD.excluir_reserva(r['id']):
                                         handle_action("delete_reserva", True, "Reserva excluída com sucesso!")
                                         st.session_state[delete_key] = False
                                         st.rerun()
                             with col2:
-                                if st.button("❌ Não", key=f"cancel_{delete_key}"):
+                                if st.button("❌ Não", key=f"cancel_res_del_{r['id']}"):
                                     st.session_state[delete_key] = False
                                     st.rerun()
         else:
@@ -376,25 +385,27 @@ elif opcao == "Viagens":
                     with col1:
                         st.write(f"**Transporte:** {v['placa']} ({v['tipo_van_onibus']})")
                     with col2:
-                        # Botão de exclusão com confirmação
+                        # Botões de exclusão para viagens
                         delete_key = get_unique_key("del_viag", v['id'])
+                        
                         if delete_key not in st.session_state:
                             st.session_state[delete_key] = False
-
-                        if st.button("🗑️ Excluir Viagem", key=delete_key):
-                            st.session_state[delete_key] = True
-                            
-                        if st.session_state[delete_key]:
+                        
+                        if not st.session_state[delete_key]:
+                            if st.button("🗑️ Excluir Viagem", key=f"del_viag_btn_{v['id']}"):
+                                st.session_state[delete_key] = True
+                                st.rerun()
+                        else:
                             st.warning("Tem certeza que deseja excluir esta viagem?")
                             col1, col2 = st.columns(2)
                             with col1:
-                                if st.button("✅ Sim", key=f"confirm_{delete_key}"):
+                                if st.button("✅ Sim", key=f"confirm_viag_del_{v['id']}"):
                                     if CRUD.excluir_viagem(v['id']):
                                         handle_action("delete_viagem", True, "Viagem excluída com sucesso!")
                                         st.session_state[delete_key] = False
                                         st.rerun()
                             with col2:
-                                if st.button("❌ Não", key=f"cancel_{delete_key}"):
+                                if st.button("❌ Não", key=f"cancel_viag_del_{v['id']}"):
                                     st.session_state[delete_key] = False
                                     st.rerun()
                     

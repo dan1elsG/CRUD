@@ -1,85 +1,129 @@
-# Sistema de Transporte Universitário
+# Sistema de Gestão de Transporte Universitário 🚌
 
-Sistema de gerenciamento de transporte universitário desenvolvido com Python, Streamlit e PostgreSQL.
+Um sistema completo para gerenciamento de transporte universitário, desenvolvido com Python, Streamlit e PostgreSQL.
 
-## 🗄️ Estrutura do Banco de Dados
+## 🌟 Funcionalidades
 
-O sistema utiliza as seguintes tabelas:
-- `Universitario`: Cadastro de estudantes
-- `ReservaTransporte`: Gestão de reservas
-- `Transporte`: Registro de veículos
-- `Viagem`: Controle de viagens
-- Tabelas de relacionamento para associações
+- Gestão de Universitários
+  - Cadastro de estudantes
+  - Visualização de lista de alunos
+  - Exclusão de registros
 
-## 🚀 Configuração
+- Gestão de Transportes
+  - Cadastro de veículos (ônibus/van)
+  - Controle de capacidade
+  - Gerenciamento de frota
 
-### Pré-requisitos
-- PostgreSQL 12 ou superior
+- Sistema de Reservas
+  - Reservas de transporte
+  - Status de confirmação automática
+  - Pontos de embarque/desembarque
+
+- Gestão de Viagens
+  - Programação de viagens
+  - Associação automática de reservas
+  - Visualização de passageiros por viagem
+
+## 🛠️ Tecnologias Utilizadas
+
+- Python 3.8+
+- Streamlit
+- PostgreSQL
+- psycopg2-binary
+- python-dotenv
+
+## 📋 Pré-requisitos
+
 - Python 3.8 ou superior
+- PostgreSQL instalado e rodando
 - pip (gerenciador de pacotes Python)
 
-### Instalação
+## 🚀 Instalação
 
 1. Clone o repositório:
 ```bash
-git clone [URL_DO_REPOSITORIO]
-cd [NOME_DO_DIRETORIO]
+git clone https://github.com/seu-usuario/transporte-universitario.git
+cd transporte-universitario
 ```
 
-2. Crie e ative um ambiente virtual:
+2. Crie um ambiente virtual:
 ```bash
-# Windows
 python -m venv venv
-venv\Scripts\activate
+```
 
-# Linux/Mac
-python3 -m venv venv
+3. Ative o ambiente virtual:
+- Windows:
+```bash
+venv\Scripts\activate
+```
+- Linux/Mac:
+```bash
 source venv/bin/activate
 ```
 
-3. Instale as dependências:
+4. Instale as dependências:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Configure o banco de dados:
-```bash
-# Conecte ao PostgreSQL
-psql -U postgres
+5. Configure o banco de dados PostgreSQL:
+- Crie um banco de dados chamado 'rota'
+- Execute o script SQL em `database_schema.sql`
 
-# Execute o script de criação do banco
-\i create_tables.sql
+## ⚙️ Configuração
+
+O sistema está configurado para conectar ao PostgreSQL com as seguintes configurações padrão:
+```python
+{
+    'host': 'localhost',
+    'database': 'rota',
+    'user': 'postgres',
+    'password': '0000',
+    'port': '5432'
+}
 ```
 
-## 📊 Funcionalidades
+Para alterar estas configurações, modifique o arquivo `DATABASE.py`.
 
-1. Gestão de Universitários
-   - Cadastro e atualização de estudantes
-   - Controle de matrículas
+## 🚀 Executando o Sistema
 
-2. Sistema de Reservas
-   - Criação de reservas de transporte
-   - Definição de pontos de embarque/desembarque
-   - Status de reserva (Pendente/Confirmado)
+1. Ative o ambiente virtual (se ainda não estiver ativo)
 
-3. Controle de Transportes
-   - Cadastro de veículos
-   - Gestão de capacidade
-   - Tipos de transporte (van/ônibus)
+2. Execute o aplicativo:
+```bash
+streamlit run main.py
+```
 
-4. Gestão de Viagens
-   - Agendamento de viagens
-   - Associação com transportes
-   - Controle de passageiros
+3. Acesse o sistema no navegador (geralmente em http://localhost:8501)
 
-## 🤝 Contribuição
+## 📚 Estrutura do Banco de Dados
 
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/NovaFeature`)
-3. Faça commit das alterações (`git commit -m 'Adiciona nova feature'`)
-4. Push para a branch (`git push origin feature/NovaFeature`)
+O sistema utiliza as seguintes tabelas:
+
+- `Universitario`: Armazena informações dos estudantes
+- `ReservaTransporte`: Gerencia as reservas de transporte
+- `Transporte`: Cadastro de veículos
+- `Viagem`: Programação de viagens
+- Tabelas de relacionamento para gestão de reservas e viagens
+
+## 🤝 Contribuindo
+
+1. Faça um Fork do projeto
+2. Crie uma Branch para sua Feature (`git checkout -b feature/AmazingFeature`)
+3. Faça o Commit de suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Faça o Push para a Branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
 ## 📝 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes. 
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## 👥 Autores
+
+* **Seu Nome** - *Trabalho Inicial* - [SeuUsuario](https://github.com/SeuUsuario)
+
+## 📧 Contato
+
+Seu Nome - [@seutwitter](https://twitter.com/seutwitter) - email@exemplo.com
+
+Link do projeto: [https://github.com/seu-usuario/transporte-universitario](https://github.com/seu-usuario/transporte-universitario) 
