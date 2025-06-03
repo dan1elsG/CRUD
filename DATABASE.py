@@ -1,31 +1,64 @@
+import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from contextlib import contextmanager
 import streamlit as st
+from dotenv import load_dotenv
+
+# Carrega as variáveis de ambiente
+load_dotenv()
 
 def get_db_config():
     """Retorna as configurações do banco de dados."""
-    return {
-        'host': 'localhost',
-        'database': 'rota',
-        'user': 'postgres',
-        'password': '0000',
-        'port': '5432'
-    }
+    # Prioriza variáveis de ambiente do sistema
+    if os.getenv('DATABASE_URL'):
+        # Parse DATABASE_URL if provided (common in production)
+        from urllib.parse import urlparse
+        db_url = urlparse(os.getenv('DATABASE_URL'))
+        return {
+            'host': db_url.hostname,
+            'database': db_url.path[1:],
+            'user': db_url.username,
+            'password': db_url.password,
+            'port': str(db_url.port or 5432)
+        }
+    # Caso contrário, usa as variáveis individuais
+    elif os.getenv('DB_HOST'):
+        return {
+            'host': os.getenv('DB_HOST'),
+            'database': os.getenv('DB_NAME'),
+            'user': os.getenv('DB_USER'),
+            'password': os.getenv('DB_PASS'),
+            'port': os.getenv('DB_PORT', '5432')
+        }
+    # Para desenvolvimento local
+    else:
+        return {
+            'host': 'localhost',
+            'database': 'rota',
+            'user': 'postgres',
+            'password': '0000',
+            'port': '5432'
+        }
 
 @contextmanager
 def conectar():
-    """
-    Gerenciador de contexto para conexão com o banco de dados.
-    """
+    """Gerenciador de contexto para conexão com o banco de dados."""
     conn = None
     try:
+        # Tenta estabelecer a conexão
         conn = psycopg2.connect(**get_db_config())
         conn.autocommit = True
         yield conn
     except psycopg2.OperationalError as e:
         st.error(f"❌ Erro de conexão com o banco de dados: {e}")
-        st.error("Verifique se o banco de dados está rodando e se as credenciais estão corretas.")
+        st.error("Verifique as configurações de conexão e se o banco de dados está acessível.")
+        if os.getenv('DATABASE_URL'):
+            st.info("Usando configuração de DATABASE_URL")
+        elif os.getenv('DB_HOST'):
+            st.info("Usando variáveis de ambiente individuais")
+        else:
+            st.info("Usando configuração local padrão")
         raise
     except psycopg2.Error as e:
         st.error(f"❌ Erro no banco de dados: {e}")
