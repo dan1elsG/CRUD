@@ -59,16 +59,27 @@ venv\Scripts\activate     # Windows
 pip install -r requirements.txt
 ```
 
-4. Configure as variáveis de ambiente:
-- Crie um arquivo `.env` na raiz do projeto
-- Adicione as configurações do banco de dados:
-```
-DB_HOST=seu_host
-DB_NAME=seu_banco
-DB_USER=seu_usuario
-DB_PASS=sua_senha
-DB_PORT=5432
-```
+4. Configure o banco de dados:
+
+   a. Crie um arquivo `.env` na raiz do projeto com as seguintes configurações:
+   ```env
+   # Configurações do Banco de Dados PostgreSQL
+   DB_HOST=localhost
+   DB_NAME=transporte_universitario
+   DB_USER=seu_usuario
+   DB_PASS=sua_senha
+   DB_PORT=5432
+   ```
+
+   b. Crie o banco de dados no PostgreSQL:
+   ```sql
+   CREATE DATABASE transporte_universitario;
+   ```
+
+   c. Execute o script de configuração do banco de dados:
+   ```bash
+   python setup_database.py
+   ```
 
 5. Execute o aplicativo:
 ```bash
@@ -82,10 +93,29 @@ sistema-transporte-universitario/
 ├── main.py              # Aplicativo principal Streamlit
 ├── CRUD.py             # Operações do banco de dados
 ├── DATABASE.py         # Configuração de conexão
+├── setup_database.py   # Script de configuração do banco
+├── database_schema.sql # Estrutura do banco de dados
 ├── requirements.txt    # Dependências do projeto
 ├── .env               # Variáveis de ambiente (não versionado)
 └── README.md          # Documentação
 ```
+
+## Banco de Dados 🗄️
+
+O sistema utiliza PostgreSQL com as seguintes tabelas:
+
+- `Universitario`: Armazena dados dos estudantes
+- `Transporte`: Cadastro de veículos
+- `Viagem`: Registro de viagens
+- `ReservaTransporte`: Gestão de reservas
+- Tabelas de relacionamento:
+  - `Universitario_Realiza_Reserva`
+  - `ReservaTransporte_Para_Viagem`
+  - `Transporte_Realiza_Viagem`
+
+Para recriar o banco de dados:
+1. Certifique-se de ter as variáveis de ambiente configuradas no `.env`
+2. Execute `python setup_database.py`
 
 ## Contribuição 🤝
 
